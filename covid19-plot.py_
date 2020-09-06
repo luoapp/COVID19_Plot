@@ -1,0 +1,47 @@
+import matplotlib.pyplot as plt
+import array
+import matplotlib.dates as dates
+import csv
+import datetime as datetime
+from subprocess import check_output
+
+def firstnonzero(a):
+    return [i for i, e in enumerate(a) if e != 0][0]
+
+
+check_output("getdatafile.cmd", shell=True)
+with open('time_series_19-covid-Deaths.csv') as csv_file:
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    line_count = 0
+    timeaxis = []
+    NY = []
+    NJ = []
+    PA = []
+    for row in csv_reader:
+        if line_count == 0:
+            for i in range(4, len(row)):
+                timeaxis.append(dates.datestr2num(row[i]))
+                i += 1
+        else:
+            if row[0] == 'New York':
+                NY = [int(j) for j in row[4:]]
+            elif row[0] == 'New Jersey':
+                NJ = [int(j) for j in row[4:]]
+            elif row[0] == 'Pennsylvania':
+                PA = [int(j) for j in row[4:]]
+        line_count += 1
+i = firstnonzero(NY)
+NYNJ = [NY[j] + NJ[j] for j in range(i,len(NY))]
+plt.gca().xaxis.set_major_formatter(dates.DateFormatter('%m/%d'))
+plt.gca().xaxis.set_major_locator(dates.DayLocator())
+plt.plot(timeaxis[i:], NY[i:])
+plt.plot(timeaxis[i:], NJ[i:])
+plt.plot(timeaxis[i:], NYNJ)
+plt.plot(timeaxis[i:], PA[i:])
+#plt.gcf().autofmt_xdate()
+plt.legend(['NY','NJ','NY+NJ','PA'])
+plt.ylabel('COVID-19')
+#plt.show()
+figfilename = 'COVID19_TriState.png'
+plt.savefig(figfilename)
+check_output(figfilename, shell=True)
